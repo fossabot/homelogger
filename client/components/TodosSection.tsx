@@ -12,7 +12,18 @@ const TodosSection: React.FC<Props> = ({applianceId, spaceType}) => {
     const [todos, setTodos] = useState<Array<any>>([]);
     const [newLabel, setNewLabel] = useState('');
     const [sortOption, setSortOption] = useState<string>('created_desc');
-    const [filterOption, setFilterOption] = useState<string>('all');
+    const [filterOption, setFilterOption] = useState<string>('not_completed');
+
+    useEffect(() => {
+        try {
+            const savedSort = localStorage.getItem('homelogger_todo_sort');
+            const savedFilter = localStorage.getItem('homelogger_todo_filter');
+            if (savedSort) setSortOption(savedSort);
+            if (savedFilter) setFilterOption(savedFilter);
+        } catch (e) {
+            // ignore (server-side or privacy settings)
+        }
+    }, []);
 
     const load = async () => {
         try {
@@ -38,9 +49,23 @@ const TodosSection: React.FC<Props> = ({applianceId, spaceType}) => {
                 }
             }));
 
+            const prettySpace = (s?: string | null) => {
+                if (!s) return null;
+                switch (s) {
+                    case 'BuildingExterior': return 'Building Exterior';
+                    case 'BuildingInterior': return 'Building Interior';
+                    case 'Electrical': return 'Electrical';
+                    case 'HVAC': return 'HVAC';
+                    case 'Plumbing': return 'Plumbing';
+                    case 'Yard': return 'Yard';
+                    default:
+                        return s.replace(/([a-z])([A-Z])/g, '$1 $2');
+                }
+            };
+
             const enriched = data.map((t: any) => ({
                 ...t,
-                sourceLabel: t.applianceId ? nameMap[Number(t.applianceId)] : (t.spaceType || null),
+                sourceLabel: t.applianceId ? nameMap[Number(t.applianceId)] : prettySpace(t.spaceType || null),
             }));
 
             setTodos(enriched);
@@ -65,6 +90,20 @@ const TodosSection: React.FC<Props> = ({applianceId, spaceType}) => {
             const added = await resp.json();
 
             // Enrich added todo with source label if appliance
+            const prettySpace = (s?: string | null) => {
+                if (!s) return null;
+                switch (s) {
+                    case 'BuildingExterior': return 'Building Exterior';
+                    case 'BuildingInterior': return 'Building Interior';
+                    case 'Electrical': return 'Electrical';
+                    case 'HVAC': return 'HVAC';
+                    case 'Plumbing': return 'Plumbing';
+                    case 'Yard': return 'Yard';
+                    default:
+                        return s.replace(/([a-z])([A-Z])/g, '$1 $2');
+                }
+            };
+
             if (added.applianceId) {
                 try {
                     const r = await fetch(`${SERVER_URL}/appliances/${added.applianceId}`);
@@ -76,7 +115,7 @@ const TodosSection: React.FC<Props> = ({applianceId, spaceType}) => {
                     console.error('Error loading appliance name', e);
                 }
             } else {
-                added.sourceLabel = added.spaceType || null;
+                added.sourceLabel = prettySpace(added.spaceType || null);
             }
 
             setTodos(prev => [...prev, added]);
@@ -95,14 +134,15 @@ const TodosSection: React.FC<Props> = ({applianceId, spaceType}) => {
             <Card.Body>
                 <h5>To-dos</h5>
                 <div style={{display: 'flex', gap: '8px', marginBottom: '8px'}}>
-                    <Form.Select aria-label="Sort todos" value={sortOption} onChange={(e) => setSortOption(e.target.value)} style={{maxWidth: '220px'}}>
+                    <Form.Select aria-label="Sort todos" value={sortOption} onChange={(e) => { setSortOption(e.target.value); try { localStorage.setItem('homelogger_todo_sort', e.target.value); } catch {} }} style={{maxWidth: '220px'}}>
                         <option value="created_desc">Created (newest)</option>
                         <option value="created_asc">Created (oldest)</option>
                         <option value="label_asc">Label (A - Z)</option>
                         <option value="label_desc">Label (Z - A)</option>
+                        <option value="group_source">Group by appliance / space</option>
                     </Form.Select>
 
-                    <Form.Select aria-label="Filter todos" value={filterOption} onChange={(e) => setFilterOption(e.target.value)} style={{maxWidth: '180px'}}>
+                    <Form.Select aria-label="Filter todos" value={filterOption} onChange={(e) => { setFilterOption(e.target.value); try { localStorage.setItem('homelogger_todo_filter', e.target.value); } catch {} }} style={{maxWidth: '180px'}}>
                         <option value="all">All</option>
                         <option value="completed">Completed</option>
                         <option value="not_completed">Not completed</option>
@@ -136,6 +176,25 @@ const TodosSection: React.FC<Props> = ({applianceId, spaceType}) => {
                                 if (sortOption === 'created_asc') return da - db || sa.localeCompare(sb);
                                 return db - da || sa.localeCompare(sb);
                             });
+
+                            if (sortOption === 'group_source') {
+                                const groups: Record<string, any[]> = {};
+                                sorted.forEach((t: any) => {
+                                    const key = t.sourceLabel || t.spaceType || 'General';
+                                    if (!groups[key]) groups[key] = [];
+                                    groups[key].push(t);
+                                });
+
+                                const keys = Object.keys(groups).sort();
+                                return keys.map((k) => (
+                                    <React.Fragment key={k}>
+                                        <ListGroup.Item className="fw-bold">{k}</ListGroup.Item>
+                                        {groups[k].map((t: any) => (
+                                            <TodoItem key={t.id} id={t.id} label={t.label} checked={t.checked} onDelete={handleDelete} applianceId={t.applianceId} spaceType={t.spaceType} sourceLabel={t.sourceLabel} createdAt={t.createdAt || t.CreatedAt || t.created_at} />
+                                        ))}
+                                    </React.Fragment>
+                                ));
+                            }
 
                             return sorted.map((t: any) => (
                                 <TodoItem key={t.id} id={t.id} label={t.label} checked={t.checked} onDelete={handleDelete} applianceId={t.applianceId} spaceType={t.spaceType} sourceLabel={t.sourceLabel} createdAt={t.createdAt || t.CreatedAt || t.created_at} />
