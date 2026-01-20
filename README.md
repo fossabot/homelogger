@@ -105,7 +105,7 @@ Backup & export
 	- the uploads directory with all files
 
 Notes & safety
-- Always keep an additional copy of the original DB before overwriting (step 3 makes a `.old`).
+- Always keep an additional copy of the original DB before overwriting.
 - If your server is behind Docker with volumes, restore the files into the host path used by the volume or restore directly inside the running container (use `docker cp` or mount the volume and replace files), then restart the container.
 - Restores can fail if versions mismatch; ensure your server code and SQLite driver versions are compatible with the DB file.
 	- the SQLite database file (under `data/db/`), and
