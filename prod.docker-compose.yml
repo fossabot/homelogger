@@ -1,0 +1,12 @@
+services:
+
+  homelogger:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./server/data/db:/root/data/db
+      - ./server/data/uploads:/root/data/uploads
+    ports:
+      - "3005:80"
+    restart: unless-stopped

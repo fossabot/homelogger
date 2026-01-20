@@ -44,7 +44,9 @@ func main() {
 	}
 
 	// Create new fiber server
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		AppName: fmt.Sprintf("HomeLogger Server %s", version.Version),
+	})
 
 	// Use CORS middleware
 	app.Use(cors.New(cors.Config{
