@@ -1,9 +1,10 @@
-
 <p align="center">
 	<img src="client/public/logoname.png" alt="HomeLogger wordmark" width="320" />
 </p>
 
 # HomeLogger
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FFrancisLaboratories%2Fhomelogger.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FFrancisLaboratories%2Fhomelogger?ref=badge_shield)
+
 
 HomeLogger is a simple home maintenance and asset tracker for homeowners. It centralizes appliances, repairs, and maintenance tasks so you can record work, receipts, and schedules for things around your home.
 
@@ -155,3 +156,7 @@ Development is ongoing. Planned features include:
 - Much more to come. Also open to suggestions and contributions!
   - Please don't submit a PR for a major feature without discussing it first via an issue or discussion post.
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FFrancisLaboratories%2Fhomelogger.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FFrancisLaboratories%2Fhomelogger?ref=badge_large)
